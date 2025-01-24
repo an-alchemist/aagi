@@ -1,57 +1,39 @@
-# Use a specific Node.js version for better reproducibility
-FROM node:23.3.0-slim AS builder
+# Use Node 22 as base
+FROM node:22-slim
 
-# Install pnpm globally and install necessary build tools
-RUN npm install -g pnpm@9.15.1 
-RUN apt-get update && \
-    apt-get install -y git python3 make g++ && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install system dependencies including git
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set Python 3 as the default python
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# Install PM2 globally
+RUN npm install -g pm2
 
-# Set the working directory
-WORKDIR /app
-
-# Copy package.json and other configuration files
-COPY package.json ./
-COPY pnpm-lock.yaml ./
-COPY tsconfig.json ./
-COPY .env /app/.env
-
-# Copy the rest of the application code
-COPY ./src ./src
-COPY ./characters ./characters
-COPY ./.env ./
-
-# Install dependencies and build the project
-RUN pnpm i
-RUN pnpm build 
-# Create a new stage for the final image
-FROM node:23.3.0-slim
-
-# Install runtime dependencies if needed
+# Install PNPM
 RUN npm install -g pnpm@9.15.1
-RUN apt-get update && \
-    apt-get install -y git python3 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
+# Set working directory
 WORKDIR /app
 
-# Copy built artifacts and production dependencies from the builder stage
-COPY --from=builder /app/package.json /app/
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/src /app/src
-COPY --from=builder /app/characters /app/characters
-COPY --from=builder /app/.env /app/
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/tsconfig.json /app/
-COPY --from=builder /app/pnpm-lock.yaml /app/
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
 
+# Install dependencies (removed --frozen-lockfile flag)
+RUN pnpm install --ignore-scripts
+
+# Copy source code, character files, and .env
+COPY . .
+
+# Ensure .env file is copied
+COPY .env .env
+
+# Build TypeScript
+RUN pnpm run build
+
+# Expose port 3000
 EXPOSE 3000
-# Set the command to run the application
-#CMD ["pnpm", "start", "--non-interactive"]
-# CMD ["node", "dist/index.js"]
+
 CMD ["pnpm", "start", "--character=characters/attar.json"]
