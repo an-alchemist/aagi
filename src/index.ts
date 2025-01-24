@@ -17,7 +17,6 @@ import { initializeDbCache } from "./cache/index.ts";
 import { character } from "./character.ts";
 import { startChat } from "./chat/index.ts";
 import { initializeClients } from "./clients/index.ts";
-import { tweetAction } from './actions/tweetAction.ts';
 import {
   getTokenForProvider,
   loadCharacters,
@@ -62,7 +61,7 @@ export function createAgent(
       character.settings?.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
     ].filter(Boolean),
     providers: [],
-    actions: [tweetAction],
+    actions: [],
     services: [],
     managers: [],
     cacheManager: cache,
