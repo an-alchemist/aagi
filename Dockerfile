@@ -18,6 +18,7 @@ WORKDIR /app
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY tsconfig.json ./
+COPY .env /app/.env
 
 # Copy the rest of the application code
 COPY ./src ./src
