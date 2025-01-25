@@ -3,6 +3,20 @@ version: '3.8'
 services:
   app:
     image: aagid
-    network_mode: "host" # This replaces the ports mapping and extra_hosts
-    tty: true # Equivalent to -t in docker run
-    stdin_open: true # Equivalent to -i in docker run
+    container_name: attar-agent
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agent.rule=Host(`agent.attarglitch.com`)"
+      - "traefik.http.routers.agent.entrypoints=websecure"
+      - "traefik.http.routers.agent.tls=true"
+      - "traefik.http.routers.agent.tls.certresolver=letsencrypt"
+      - "traefik.http.services.agent.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.cors-agent.headers.accesscontrolalloworigins=https://attarglitch.com"
+      - "traefik.http.routers.agent.middlewares=cors-agent"
+
+networks:
+  proxy:
+    external: true
+    name: docker_proxy
