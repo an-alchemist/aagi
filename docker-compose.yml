@@ -1,20 +1,30 @@
 version: '3.8'
-
 services:
   app:
     image: aagid
     container_name: attar-agent
     networks:
       - proxy
+    tty: true
+    stdin_open: true
+    expose:
+      - "3000"
     labels:
+      # Basic routing
       - "traefik.enable=true"
       - "traefik.http.routers.agent.rule=Host(`agent.attarglitch.com`)"
       - "traefik.http.routers.agent.entrypoints=websecure"
       - "traefik.http.routers.agent.tls=true"
       - "traefik.http.routers.agent.tls.certresolver=letsencrypt"
       - "traefik.http.services.agent.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.cors-agent.headers.accesscontrolalloworigins=https://attarglitch.com"
-      - "traefik.http.routers.agent.middlewares=cors-agent"
+      # CORS headers middleware according to docs
+      - "traefik.http.middlewares.agent-cors.headers.accesscontrolallowmethods=GET,POST,OPTIONS"
+      - "traefik.http.middlewares.agent-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.agent-cors.headers.accesscontrolalloworiginlist=https://attarglitch.com"
+      - "traefik.http.middlewares.agent-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.agent-cors.headers.addvaryheader=true"
+      # Apply middleware to router
+      - "traefik.http.routers.agent.middlewares=agent-cors"
 
 networks:
   proxy:
