@@ -2,7 +2,7 @@
     "name": "attar",
     "plugins": [],
     "clients": [],
-    "modelProvider": "anthropic",
+    "modelProvider": "groq",
     "settings": {
         "secrets": {}
     },
